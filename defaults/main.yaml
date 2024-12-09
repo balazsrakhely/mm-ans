@@ -1,1 +1,6 @@
 script_name: freeip28range
+mm_provider:
+  mm_url: http://micetro.example.net
+  mm_user: apiuser
+  mm_password: apipasswd
+network: "172.16.17.0"
