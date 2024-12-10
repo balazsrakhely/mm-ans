@@ -214,7 +214,8 @@ class LookupModule(LookupBase):
                     return free_ips
 
         # If no /28 network found, raise an error
-        raise AnsibleError("No /28 network found in the provided ranges.")
+        raise AnsibleModuleError("No /28 network found in the provided ranges.")
+        return []
 
 
 
