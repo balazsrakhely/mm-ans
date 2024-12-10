@@ -22,6 +22,7 @@ from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro
     doapi,
     TRUEFALSE,
 )
+from ansible.utils.display import Display
 
 DOCUMENTATION = r"""
     lookup: freeip
@@ -188,6 +189,7 @@ class LookupModule(LookupBase):
             # Iterate through ranges to find a /28 network
             ranges = result["message"]["result"]["ranges"]
             for net_range in ranges:
+                display.display(net_range)
                 if net_range.get("cidr") == 28:
                     # Get the range reference
                     ref = net_range["ref"]
