@@ -188,9 +188,10 @@ class LookupModule(LookupBase):
             # Iterate through ranges to find a /28 network
             ranges = result["message"]["result"]["ranges"]
             for net_range in ranges:
-                print(f"Current range's name: {net_range['name']}")
-                print(f"Current range's cidr: {net_range['cidr']}")
-                if net_range.get("cidr") == 28:
+                curr_cidr = net_range['name']
+                print(f"Current range's cidr: {curr_cidr}")
+                _, prefix_length = curr_cidr.split("/")
+                if int(prefix_length) == 28:
                     # Get the range reference
                     ref = net_range["ref"]
 
