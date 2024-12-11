@@ -177,7 +177,6 @@ class LookupModule(LookupBase):
             curr_cidr = range_obj['name']
             print(f"Current range's cidr: {curr_cidr}")
             _, prefix_length = curr_cidr.split("/")
-            print(range_obj)
             if int(prefix_length) == 28:
                 print("Found range with a prefix length of 28")
                 # Get the range reference
@@ -191,7 +190,7 @@ class LookupModule(LookupBase):
                 }
                 if startaddress:
                     databody["startAddress"] = startaddress
-                url = f"Ranges/{range_obj_ref}/NextFreeAddress"
+                url = f"{range_obj_ref}/NextFreeAddress"
                 # Loop to collect the requested number of free IPs
                 for _ in range(multi):
                     ip_result = doapi(url, http_method, mm_provider, databody)
@@ -201,11 +200,11 @@ class LookupModule(LookupBase):
                     free_ips.append(to_text(ip_result["message"]["result"]["address"]))
                 # Return the list of free IPs for the /28 range 
                 return free_ips
-            elif int(prefix_length) < 28 and int(range_obj["numChildren"]):
+            elif int(prefix_length) < 28 and range_obj.get("childRanges"):
                 # Recurse into child ranges
                 for child in range_obj['childRanges']:
                     child_ref = child['ref']
-                    url = f"Ranges/{child_ref}"
+                    url = f"{child_ref}"
                     child_range_result = doapi(url, http_method, mm_provider, {})
                     child_range = child_range_result["message"]["result"]["range"]
                     recurse_result = recurse_ranges(child_range)
