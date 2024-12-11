@@ -177,6 +177,7 @@ class LookupModule(LookupBase):
             curr_cidr = range_obj['name']
             print(f"Current range's cidr: {curr_cidr}")
             _, prefix_length = curr_cidr.split("/")
+            print(range_obj)
             if int(prefix_length) == 28:
                 print("Found range with a prefix length of 28")
                 # Get the range reference
