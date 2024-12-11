@@ -173,52 +173,68 @@ class LookupModule(LookupBase):
         startaddress = kwargs.get("startaddress", "")
         ipfilter = kwargs.get("filter", "")
 
-            # Loop over all networks to find a /28 range
+        def recurse_ranges(range_obj):
+            curr_cidr = range_obj['name']
+            print(f"Current range's cidr: {curr_cidr}")
+            _, prefix_length = curr_cidr.split("/")
+            if int(prefix_length) == 28:
+                print("Found range with a prefix length of 28")
+                # Get the range reference
+                range_obj_ref = range_obj["ref"]
+                # Fetch free IPs in the /28 range
+                free_ips = []
+                databody = {
+                    "temporaryClaimTime": claim,
+                    "ping": ping,
+                    "excludeDHCP": excludedhcp,
+                }
+                if startaddress:
+                    databody["startAddress"] = startaddress
+                url = f"Ranges/{range_obj_ref}/NextFreeAddress"
+                # Loop to collect the requested number of free IPs
+                for _ in range(multi):
+                    ip_result = doapi(url, http_method, mm_provider, databody)
+                    if not ip_result["message"]:
+                        print(f"No more free IPs in this ({curr_cidr}) range. Found {len(free_ips)} ")
+                        break
+                    free_ips.append(to_text(ip_result["message"]["result"]["address"]))
+                # Return the list of free IPs for the /28 range 
+                return free_ips
+            elif int(prefix_length) < 28 and not range_obj['isLeaf']:
+                # Recurse into child ranges
+                for child in range_obj['childRanges']:
+                    child_ref = child['ref']
+                    url = f"Ranges/{child_ref}"
+                    child_range_result = doapi(url, http_method, mm_provider, {})
+                    child_range = child_range_result["message"]["result"]["range"]
+                    recurse_result = recurse_ranges(child_range)
+                    if recurse_result:
+                        return recurse_result
+            return []
+
+        # Loop over all networks to find a /28 range
         for network in networks:
             # Get the requested network ranges
             http_method = "GET"
             url = "Ranges"
             databody = {"filter": network}
-            result = doapi(url, http_method, mm_provider, databody)
+            network_result = doapi(url, http_method, mm_provider, databody)
 
             # Check if any ranges were found
-            if not result.get("message").get("result", {}).get("ranges", []):
+            if not network_result.get("message").get("result", {}).get("ranges", []):
                 continue
 
             # Iterate through ranges to find a /28 network
-            ranges = result["message"]["result"]["ranges"]
-            for net_range in ranges:
-                curr_cidr = net_range['name']
-                print(f"Current range's cidr: {curr_cidr}")
-                _, prefix_length = curr_cidr.split("/")
-                if int(prefix_length) == 28:
-                    # Get the range reference
-                    ref = net_range["ref"]
-
-                    # Fetch free IPs in the /28 range
-                    free_ips = []
-                    databody = {
-                        "temporaryClaimTime": claim,
-                        "ping": ping,
-                        "excludeDHCP": excludedhcp,
-                    }
-                    if startaddress:
-                        databody["startAddress"] = startaddress
-                    url = f"{ref}/NextFreeAddress"
-
-                    # Loop to collect the requested number of free IPs
-                    for _ in range(multi):
-                        ip_result = doapi(url, http_method, mm_provider, databody)
-                        if not ip_result["message"]:
-                            break
-                        free_ips.append(to_text(ip_result["message"]["result"]["address"]))
-
-                    # Return the list of free IPs for the /28 range 
-                    return free_ips
+            net_ranges = network_result["message"]["result"]["ranges"]
+            for net_range in net_ranges:
+                recurse_result = recurse_ranges(child_range)
+                if recurse_result:
+                    return recurse_result
 
         # If no /28 network found, raise an error
         print("No /28 network found in the provided ranges.")
         return []
+
 
 
 
