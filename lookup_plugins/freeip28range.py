@@ -200,7 +200,7 @@ class LookupModule(LookupBase):
                     free_ips.append(to_text(ip_result["message"]["result"]["address"]))
                 # Return the list of free IPs for the /28 range 
                 return free_ips
-            elif int(prefix_length) < 28 and not range_obj['isLeaf']:
+            elif int(prefix_length) < 28 and int(range_obj["numChildren"]):
                 # Recurse into child ranges
                 for child in range_obj['childRanges']:
                     child_ref = child['ref']
