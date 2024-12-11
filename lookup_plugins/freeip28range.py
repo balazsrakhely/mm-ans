@@ -227,7 +227,7 @@ class LookupModule(LookupBase):
             # Iterate through ranges to find a /28 network
             net_ranges = network_result["message"]["result"]["ranges"]
             for net_range in net_ranges:
-                recurse_result = recurse_ranges(child_range)
+                recurse_result = recurse_ranges(net_range)
                 if recurse_result:
                     return recurse_result
 
