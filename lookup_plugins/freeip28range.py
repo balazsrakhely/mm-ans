@@ -190,7 +190,7 @@ class LookupModule(LookupBase):
                 }
                 if startaddress:
                     databody["startAddress"] = startaddress
-                url = f"{range_obj_ref}/NextFreeAddress"
+                url = f"Ranges/{range_obj_ref}/NextFreeAddress"
                 # Loop to collect the requested number of free IPs
                 for _ in range(multi):
                     ip_result = doapi(url, http_method, mm_provider, databody)
@@ -204,7 +204,7 @@ class LookupModule(LookupBase):
                 # Recurse into child ranges
                 for child in range_obj['childRanges']:
                     child_ref = child['ref']
-                    url = f"{child_ref}"
+                    url = f"Ranges/{child_ref}"
                     child_range_result = doapi(url, http_method, mm_provider, {})
                     child_range = child_range_result["message"]["result"]["range"]
                     recurse_result = recurse_ranges(child_range)
