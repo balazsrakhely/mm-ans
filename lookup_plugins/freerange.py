@@ -166,12 +166,7 @@ class LookupModule(LookupBase):
             # AnsibleUnicode, depending on Ansible and Python version)
             terms[1] = list(map(str, terms[1]))
             networks = list(map(str.strip, terms[1]))
-        multi = kwargs.get("multi", 1)
-        claim = kwargs.get("claim", 0)
-        ping = TRUEFALSE[kwargs.get("ping", True)]
-        excludedhcp = TRUEFALSE[kwargs.get("excludedhcp", False)]
-        startaddress = kwargs.get("startaddress", "")
-        ipfilter = kwargs.get("filter", "")
+
         target_prefix_length = kwargs.get("prefixlength", 28)
         title_text = kwargs.get("title", "free")
 
@@ -180,28 +175,7 @@ class LookupModule(LookupBase):
             print(f"Current range's cidr: {curr_cidr}")
             _, prefix_length = curr_cidr.split("/")
             if int(prefix_length) == int(target_prefix_length) and title_text in range_obj.get("customProperties", {}).get("Title", "").lower():
-                print("Found range with a prefix length of 28")
-                # Get the range reference
-                range_obj_ref = range_obj["ref"]
-                # Fetch free IPs in the /28 range
-                free_ips = []
-                databody = {
-                    "temporaryClaimTime": claim,
-                    "ping": ping,
-                    "excludeDHCP": excludedhcp,
-                }
-                if startaddress:
-                    databody["startAddress"] = startaddress
-                url = f"{range_obj_ref}/NextFreeAddress"
-                # Loop to collect the requested number of free IPs
-                for _ in range(multi):
-                    ip_result = doapi(url, http_method, mm_provider, databody)
-                    if not ip_result["message"]:
-                        print(f"No more free IPs in this ({curr_cidr}) range. Found {len(free_ips)} ")
-                        break
-                    free_ips.append(to_text(ip_result["message"]["result"]["address"]))
-                # Return the list of free IPs for the /28 range 
-                return free_ips
+                return [curr_cidr]
             elif int(prefix_length) < 28 and range_obj.get("childRanges"):
                 # Recurse into child ranges
                 for child in range_obj['childRanges']:

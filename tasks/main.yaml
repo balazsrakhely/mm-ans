@@ -1,3 +1,3 @@
 - name: Execute lookup
   debug:
-    msg: "{{ lookup(script_name, mm_provider, network) }}"
+    msg: "{{ lookup(script_name, mm_provider, network, prefixlength=range_prefixlength, title=range_title) }}"

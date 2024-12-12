@@ -1,1 +1,3 @@
-script_name: freeip28range
+script_name: freerange
+range_prefixlength: 28
+range_title: free
