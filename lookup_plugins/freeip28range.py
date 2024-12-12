@@ -172,12 +172,14 @@ class LookupModule(LookupBase):
         excludedhcp = TRUEFALSE[kwargs.get("excludedhcp", False)]
         startaddress = kwargs.get("startaddress", "")
         ipfilter = kwargs.get("filter", "")
+        target_prefix_length = kwargs.get("prefixlength", 28)
+        title_text = kwargs.get("title", "free")
 
         def recurse_ranges(range_obj):
             curr_cidr = range_obj['name']
             print(f"Current range's cidr: {curr_cidr}")
             _, prefix_length = curr_cidr.split("/")
-            if int(prefix_length) == 28:
+            if int(prefix_length) == int(target_prefix_length) and title_text in range_obj.get("customProperties", {}).get("Title", "").lower():
                 print("Found range with a prefix length of 28")
                 # Get the range reference
                 range_obj_ref = range_obj["ref"]
