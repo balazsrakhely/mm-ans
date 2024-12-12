@@ -8,7 +8,7 @@
 # python 3 headers, required if submitting to Ansible
 """Ansible lookup plugin.
 
-Lookup plugin for finding the next free IP address in
+Lookup plugin for finding the next matching range in
 a network zone in the Micetro.
 """
 
@@ -24,19 +24,8 @@ from ansible_collections.menandmice.ansible_micetro.plugins.module_utils.micetro
 )
 
 DOCUMENTATION = r"""
-    lookup: freeip
-    author: Ton Kersten <t.kersten@atcomputing.nl> for Men&Mice
-    version_added: "2.7"
-    short_description: Find free IP address(es) in a given network range in the Micetro
-    description:
-      - This lookup returns free IP address(es) in a range or ranges
-        specified by the network names C(e.g. examplenet). This can be
-        a string or a list
-      - If multiple IP addresses are returned, the results will be returned as
-        a comma-separated list.
-        In such cases you may want to pass option C(wantlist=True) to the plugin,
-        which will result in the record values being returned as a list
-        over which you can iterate later on (or use C(query) instead)
+    lookup: freerange
+    short_description: Find the first matching network range
     options:
       mm_provider:
         description: Definition of the Micetro API mm_provider
@@ -58,51 +47,26 @@ DOCUMENTATION = r"""
             no_log: True
       network:
         description:
-          - network zone(s) from which the first free IP address is to be found.
+          - network zone(s) from which the first matching subnet is to be found
           - This is either a single network or a list of networks
         type: list
         required: True
-      multi:
-        description: Get a list of x number of free IP addresses from the
-          requested zones
+      prefixlength:
+        description: The prefix length of the range to search for
         type: int
         required: False
-        default: False
-      claim:
-        description: Claim the IP address(es) for the specified amount of time in seconds
-        type: int
-        required: False
-      ping:
-        description: ping the address found before returning
-        type: bool
-        required: False
-        default: False
-      excludedhcp:
-        description: exclude DHCP reserved ranges from result
-        type: bool
-        required: False
-        default: False
-      startaddress:
-        description:
-          - Start address when looking for the next free address
-          - When the start address is not in de zone it will be ignored
+        default: 28
+      title:
+        description: The subtext to search for in the range's title
         type: str
         required: False
-        default: None
-      filter:
-        description:
-          - Micetro filter statement
-          - Filter validation is done by the Micetro, not in the plugin
-          - More filter info on https://docs.menandmice.com/display/MM930/Quickfilter
-        type: str
-        required: False
-        default: None
+        default: "free"
 """
 
 EXAMPLES = r"""
-- name: get the first free IP address in a zone
+- name: get the first matching range with default prefixlength and title substring
   debug:
-    msg: "This is the next free IP: {{ lookup('menandmice.ansible_micetro.freeip', mm_provider, network) }}"
+    msg: "This is the next matching range: {{ lookup('freerange', mm_provider, network) }}"
   vars:
     mm_provider:
       mm_url: http://micetro.example.net
@@ -110,9 +74,9 @@ EXAMPLES = r"""
       mm_password: apipasswd
     network: examplenet
 
-- name: get the first free IP addresses in multiple zones
+- name: get the first matching range from multiple network zones with provided prefixlength and title substring
   debug:
-    msg: "This is the next free IP: {{ query('menandmice.ansible_micetro.freeip', mm_provider, network, multi=5, claim=60) }}"
+    msg: "This is the next matching range: {{ query('freerange', mm_provider, network, prefixlength=28, title="free") }}"
   vars:
     mm_url: http://micetro.example.net
     mm_user: apiuser
@@ -120,22 +84,13 @@ EXAMPLES = r"""
     network:
       - examplenet
       - examplecom
-
-  - name: get the first free IP address in a zone and ping
-    debug:
-      msg: "This is the next free IP: {{ query('menandmice.ansible_micetro.freeip', mm_provider, network, ping=True) }}"
-    vars:
-      mm_url: http://micetro.example.net
-      mm_user: apiuser
-      mm_passwd: apipasswd
-      network: examplenet
 """
 
 RETURN = r"""
 _list:
-  description: A list containing the free IP address(es) in the network range
+  description: A list containing the matching network ranges
   fields:
-    0: IP address(es)
+    0: network CIDRs
 """
 
 
@@ -146,7 +101,7 @@ class LookupModule(LookupBase):
         """Variabele terms contains a list with supplied parameters.
 
         - mm_provider -> Definition of the Micetro API mm_provider
-        - Network  -> The zone from which the free IP address(es) are found
+        - Network  -> The zone from which the matching range(s) are found
                       Either: CIDR notation, network notation or network name
                       e.g. 172.16.17.0/24 or 172.16.17.0 or examplenet
                       Either string or list
