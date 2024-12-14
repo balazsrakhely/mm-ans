@@ -136,10 +136,10 @@ class LookupModule(LookupBase):
                     range_ref = range_obj['ref']
                     url = f"{range_ref}"
                     databody = {
-                      "ref": range_ref
+                      "ref": range_ref,
                       "properties": {
                         "Title": new_title_text
-                      }
+                      },
                       "saveComment": "Ansible API"
                     }
                     update_title_res = doapi(url, "PUT", mm_provider, databody)
