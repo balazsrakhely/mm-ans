@@ -178,12 +178,12 @@ class LookupModule(LookupBase):
         # If no acceptable range found, raise an error
         raise AnsibleError(f"No acceptable {target_prefix_length} range found in the provided network(s).")
 
-    def doapi_with_errcheck(url, method, mm_provider, databody):
-        doapi_result = doapi(url, method, mm_provider, databody)
-        doapi_warnings = doapi_result.get("warnings", "")
-        if doapi_warnings:
-            raise AnsibleError(f"{doapi_warnings}")
-        return doapi_result
+def doapi_with_errcheck(url, method, mm_provider, databody):
+    doapi_result = doapi(url, method, mm_provider, databody)
+    doapi_warnings = doapi_result.get("warnings", "")
+    if doapi_warnings:
+        raise AnsibleError(f"{doapi_warnings}")
+    return doapi_result
 
 
 
