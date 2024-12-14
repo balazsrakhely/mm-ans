@@ -132,19 +132,18 @@ class LookupModule(LookupBase):
             _, prefix_length = curr_cidr.split("/")
             if int(prefix_length) == int(target_prefix_length) and title_text in range_obj.get("customProperties", {}).get("Title", "").lower():
                 # Modify the range's title (e.g. reserve it by changing the title to reserved)
-                if new_title_text {
-                  range_ref = range_obj['ref']
-                  url = f"{range_ref}"
-                  databody = {
-                    "ref": range_ref
-                    "properties": {
-                      "Title": new_title_text
+                if new_title_text:
+                    range_ref = range_obj['ref']
+                    url = f"{range_ref}"
+                    databody = {
+                      "ref": range_ref
+                      "properties": {
+                        "Title": new_title_text
+                      }
+                      "saveComment": "Ansible API"
                     }
-                    "saveComment": "Ansible API"
-                  }
-                  update_title_res = doapi(url, "PUT", mm_provider, databody)
-                  print(f"Update title api call result: {update_title_res}")
-                }
+                    update_title_res = doapi(url, "PUT", mm_provider, databody)
+                    print(f"Update title api call result: {update_title_res}")
                 return [curr_cidr]
             elif int(prefix_length) < 28 and range_obj.get("childRanges"):
                 # Recurse into child ranges
