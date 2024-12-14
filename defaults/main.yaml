@@ -1,3 +1,4 @@
 script_name: freerange
 range_prefixlength: 28
 range_title: free
+new_range_title: reserved
