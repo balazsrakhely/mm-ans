@@ -143,7 +143,6 @@ class LookupModule(LookupBase):
                       "saveComment": "Ansible API"
                     }
                     update_title_res = doapi(url, "PUT", mm_provider, databody)
-                    if update_title_res['message']
                 return [curr_cidr]
             elif int(prefix_length) < 28 and range_obj.get("childRanges"):
                 # Recurse into child ranges
