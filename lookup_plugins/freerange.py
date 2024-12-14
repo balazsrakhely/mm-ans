@@ -74,9 +74,9 @@ EXAMPLES = r"""
       mm_password: apipasswd
     network: examplenet
 
-- name: get the first matching range from multiple network zones with provided prefixlength and title substring
+- name: get the first matching range from multiple network zones with provided prefixlength, title substring and new title
   debug:
-    msg: "This is the next matching range: {{ query('freerange', mm_provider, network, prefixlength=28, title="free") }}"
+    msg: "This is the next matching range: {{ lookup('freerange', mm_provider, network, prefixlength=28, title="free", new_title="reserved") }}"
   vars:
     mm_url: http://micetro.example.net
     mm_user: apiuser
@@ -88,9 +88,9 @@ EXAMPLES = r"""
 
 RETURN = r"""
 _list:
-  description: A list containing the matching network ranges
+  description: A list containing the matching network ranges (a single range with lookup call is a string, not a list)
   fields:
-    0: network CIDRs
+    0: network CIDR(s)
 """
 
 
@@ -142,14 +142,14 @@ class LookupModule(LookupBase):
                       },
                       "saveComment": "Ansible API"
                     }
-                    update_title_res = doapi(url, "PUT", mm_provider, databody)
+                    update_title_res = doapi_with_errcheck(url, "PUT", mm_provider, databody)
                 return [curr_cidr]
             elif int(prefix_length) < 28 and range_obj.get("childRanges"):
                 # Recurse into child ranges
                 for child in range_obj['childRanges']:
                     child_ref = child['ref']
                     url = f"{child_ref}"
-                    child_range_result = doapi(url, http_method, mm_provider, {})
+                    child_range_result = doapi_with_errcheck(url, http_method, mm_provider, {})
                     child_range = child_range_result["message"]["result"]["range"]
                     recurse_result = recurse_ranges(child_range)
                     if recurse_result:
@@ -162,9 +162,7 @@ class LookupModule(LookupBase):
             http_method = "GET"
             url = "Ranges"
             databody = {"filter": network}
-            network_result = doapi(url, http_method, mm_provider, databody)
-            print(network_result)
-            return []
+            network_result = doapi_with_errcheck(url, http_method, mm_provider, databody)
 
             # Check if any ranges were found
             if not network_result.get("message").get("result", {}).get("ranges", []):
@@ -179,10 +177,13 @@ class LookupModule(LookupBase):
 
         # If no acceptable range found, raise an error
         raise AnsibleError(f"No acceptable {target_prefix_length} range found in the provided network(s).")
-        return []
 
-
-
+    def doapi_with_errcheck(url, method, mm_provider, databody):
+        doapi_result = doapi(url, method, mm_provider, databody)
+        doapi_warnings = doapi_result.get("warnings", "")
+        if doapi_warnings:
+            raise AnsibleError(f"{doapi_warnings}")
+        return doapi_result
 
 
 
