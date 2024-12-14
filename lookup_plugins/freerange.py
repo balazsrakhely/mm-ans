@@ -143,7 +143,7 @@ class LookupModule(LookupBase):
                       "saveComment": "Ansible API"
                     }
                     update_title_res = doapi(url, "PUT", mm_provider, databody)
-                    print(f"Update title api call result: {update_title_res}")
+                    if update_title_res['message']
                 return [curr_cidr]
             elif int(prefix_length) < 28 and range_obj.get("childRanges"):
                 # Recurse into child ranges
@@ -164,6 +164,8 @@ class LookupModule(LookupBase):
             url = "Ranges"
             databody = {"filter": network}
             network_result = doapi(url, http_method, mm_provider, databody)
+            print(network_result)
+            return []
 
             # Check if any ranges were found
             if not network_result.get("message").get("result", {}).get("ranges", []):
@@ -176,8 +178,8 @@ class LookupModule(LookupBase):
                 if recurse_result:
                     return recurse_result
 
-        # If no /28 network found, raise an error
-        print("No /28 network found in the provided ranges.")
+        # If no acceptable range found, raise an error
+        raise AnsibleError(f"No acceptable {target_prefix_length} range found in the provided network(s).")
         return []
 
 
