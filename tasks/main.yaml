@@ -1,3 +1,16 @@
-- name: Execute lookup
-  debug:
-    msg: "{{ lookup(script_name, mm_provider, network, prefixlength=range_prefixlength, title=range_title, new_title=new_range_title) }}"
+- name: Add a reservation for a network range
+  findrange:
+    mm_provider: "{{ mm_provider }}"
+    network: "{{ network }}"
+    prefixlength: "{{ range_prefixlength }}"
+    title: "{{ range_title }}"
+    new_title: "{{ new_range_title }}"
+  delegate_to: localhost
+  register: _findrange_result
+
+- debug:
+    var: _findrange_result
+
+- name: Record response
+  set_fact:
+    findrange_result: "{{ _findrange_result }}"
